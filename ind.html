@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+<div class="wrap">
+</div>
+
+  <script src="https://allohatv.github.io/insert-player.js"></script>
+<script>
+const players = {
+  "ma": id=>`https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`,
+};
+
+function extractKP(input){
+  if(!input) return '';
+  input=input.trim();
+  const m = input.match(/kinopoisk\.ru\/(?:film|series)\/(\d+)/i);
+  if(m) return m[1];
+  const digits = input.match(/\d{1,10}/);
+  return digits ? digits[0] : '';
+}
+
+// Создание плееров
+async function buildPlayers(id){
+  const switcher = document.getElementById('playerSwitcher');
+  const frame = document.getElementById('playerFrame');
+  switcher.innerHTML=''; frame.innerHTML='<div>Загрузка...</div>';
+
+  let created=0;
+  for(const [name, fn] of Object.entries(players)){
+    try{
+      const src = typeof fn==='function'?await fn(id):null;
+      if(!src) continue;
+      const btn = document.createElement('button');
+      btn.className='switch-btn'; btn.type='button'; btn.textContent=name;
+      btn.setAttribute('role','tab'); btn.setAttribute('aria-pressed','false');
+      btn.addEventListener('click', ()=>{
+        [...switcher.children].forEach(b=>b.setAttribute('aria-pressed','false'));
+        btn.setAttribute('aria-pressed','true'); showPlayer(src,name);
+      });
+      switcher.appendChild(btn);
+      created++;
+    }catch(e){console.warn('player build error',name,e);}
+  }
+  if(created===0){ frame.innerHTML='❌ Плееры не найдены'; return; }
+  switcher.querySelector('button')?.click();
+}
+
+// Показ выбранного плеера
+function showPlayer(src,name){
+  const frame = document.getElementById('playerFrame');
+  const iframe=document.createElement('iframe');
+  iframe.src=src; iframe.loading='lazy';
+  iframe.title=name; iframe.allowFullscreen=''; iframe.setAttribute('allow','autoplay; fullscreen; picture-in-picture');
+  frame.innerHTML=''; frame.appendChild(iframe);
+}
+
+// Загрузка из URL
+(function(){
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id');
+  if(id) buildPlayers(id);
+})();
+</script>
+</body>
+</html>
