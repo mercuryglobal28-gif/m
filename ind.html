@@ -16,7 +16,7 @@
     const id = new URLSearchParams(location.search).get('id');
     
     if (id) {
-      const src = `https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`;
+      const src = `https://harald-as.newplayjj.com/?kp=${id}`;
       document.body.innerHTML = `<iframe src="${src}" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
     } else {
       document.body.innerHTML = '<div class="msg">🎬 الرجاء إضافة ?id=KINOPISK_ID إلى الرابط</div>';
