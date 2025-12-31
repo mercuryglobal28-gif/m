@@ -3,23 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alloha Player</title>
+<title>Player</title>
 <style>
-  body, html, iframe { margin: 0; padding: 0; width: 100%; height: 100%; border: 0; background: #0b1020; overflow: hidden; }
-  .msg { color: #fff; font-family: sans-serif; text-align: center; padding-top: 20px; }
+  body, html, iframe { margin: 0; padding: 0; width: 100%; height: 100%; border: 0; background: #000; overflow: hidden; }
+  .err { color: #fff; font-family: sans-serif; text-align: center; padding-top: 20px; }
 </style>
 </head>
 <body>
-  <script src="https://allohatv.github.io/insert-player.js"></script>
+    <script src="https://allohatv.github.io/insert-player.js"></script>
 <script>
   (function() {
-    const id = new URLSearchParams(location.search).get('id');
-    
-    if (id) {
-      const src = `https://harald-as.newplayjj.com/?kp=${id}`;
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const token = params.get('token');
+
+    if (id && token) {
+      const src = `https://harald-as.newplayjj.com/?kp=${id}&token=${token}`;
       document.body.innerHTML = `<iframe src="${src}" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
     } else {
-      document.body.innerHTML = '<div class="msg">🎬 الرجاء إضافة ?id=KINOPISK_ID إلى الرابط</div>';
+      document.body.innerHTML = '<div class="err">❌ Error: ?id=...&token=... missing</div>';
     }
   })();
 </script>
