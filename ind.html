@@ -1,21 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>JSON Viewer</title>
+    <style>
+        body {
+            background-color: #1e1e1e; /* خلفية داكنة مريحة للعين */
+            color: #d4d4d4; /* لون نص فاتح */
+            font-family: 'Courier New', Courier, monospace; /* خط يشبه الكود */
+            margin: 0;
+            padding: 20px;
+        }
+        #output {
+            white-space: pre-wrap; /* للحفاظ على تنسيق الأسطر */
+            word-wrap: break-word; /* لكسر الكلمات الطويلة */
+            background-color: #252526;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #3e3e42;
+        }
+        .error {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        .loading {
+            color: #4ec9b0;
+        }
+    </style>
+</head>
 <body>
-      <script src="https://allohatv.github.io/insert-player.js"></script>
-<script>
-  (function() {
-    const query = location.search;
-    const keyword = 'url=';
-        const index = query.indexOf(keyword);
-    if (index !== -1) {
-      let targetUrl = query.substring(index + keyword.length);
-      targetUrl = decodeURIComponent(targetUrl);
-      if (!targetUrl.startsWith('http')) {
-        targetUrl = 'https://' + targetUrl;
-      }
-      document.body.innerHTML = `<iframe src="${targetUrl}" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>`;
-    } 
-  })();
-</script>
+
+    <div id="output" class="loading">جاري جلب البيانات...</div>
+
+    <script>
+      (function() {
+        // 1. استخراج الرابط من الـ URL الحالي
+        // نبحث عن قيمة المعامل 'url='
+        const queryParams = new URLSearchParams(window.location.search);
+        let targetUrl = queryParams.get('url');
+
+        const outputDiv = document.getElementById('output');
+
+        if (targetUrl) {
+            // تصحيح الرابط إذا لم يحتوي على http
+            // (بعض الروابط قد تأتي مشفرة أو بدون البروتوكول)
+            if (!targetUrl.startsWith('http')) {
+                // قد يكون الرابط مشفراً بـ URL Encode، نفك تشفيره أولاً
+                 // إذا كان الرابط يأتي كما في كودك القديم، قد تحتاج لإضافة https يدوياً
+                 // هنا نفترض أن الرابط يأتي كاملاً أو يحتاج لفك تشفير بسيط
+                 targetUrl = decodeURIComponent(targetUrl);
+                 if(!targetUrl.startsWith('http')) {
+                     targetUrl = 'https://' + targetUrl;
+                 }
+            }
+
+            // 2. طلب البيانات من الرابط (Fetch)
+            fetch(targetUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json(); // نفترض أن البيانات هي JSON
+                })
+                .then(data => {
+                    // 3. عرض البيانات بنجاح
+                    // JSON.stringify(data, null, 4) يقوم بتنسيق الكود بمسافات بادئة (4 مسافات)
+                    outputDiv.innerHTML = JSON.stringify(data, null, 4);
+                    outputDiv.classList.remove('loading');
+                })
+                .catch(error => {
+                    // معالجة الأخطاء
+                    console.error('Error fetching data:', error);
+                    outputDiv.innerHTML = `<span class="error">فشل في جلب البيانات.<br>السبب: ${error.message}<br><br>تأكد من أن الرابط يعمل ويسمح بـ (CORS).</span>`;
+                    outputDiv.classList.remove('loading');
+                });
+
+        } else {
+            outputDiv.innerHTML = '<span class="error">لم يتم العثور على رابط (url parameter) في العنوان.</span>';
+            outputDiv.classList.remove('loading');
+        }
+      })();
+    </script>
 </body>
 </html>
