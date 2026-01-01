@@ -2,81 +2,74 @@
 <html lang="ar" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <title>JSON Viewer</title>
+    <title>JSON Viewer (Fixed CORS)</title>
     <style>
         body {
-            background-color: #1e1e1e; /* خلفية داكنة مريحة للعين */
-            color: #d4d4d4; /* لون نص فاتح */
-            font-family: 'Courier New', Courier, monospace; /* خط يشبه الكود */
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 20px;
         }
         #output {
-            white-space: pre-wrap; /* للحفاظ على تنسيق الأسطر */
-            word-wrap: break-word; /* لكسر الكلمات الطويلة */
+            white-space: pre-wrap;
+            word-wrap: break-word;
             background-color: #252526;
             padding: 15px;
             border-radius: 5px;
             border: 1px solid #3e3e42;
         }
-        .error {
-            color: #ff6b6b;
-            font-weight: bold;
-        }
-        .loading {
-            color: #4ec9b0;
-        }
+        .error { color: #ff6b6b; font-weight: bold; }
+        .loading { color: #4ec9b0; }
+        h3 { margin-top: 0; color: #569cd6; }
     </style>
 </head>
 <body>
 
-    <div id="output" class="loading">جاري جلب البيانات...</div>
-<script src="https://allohatv.github.io/insert-player.js"></script>
+    <div id="output" class="loading">جاري جلب البيانات عبر الوسيط...</div>
+
     <script>
       (function() {
-        // 1. استخراج الرابط من الـ URL الحالي
-        // نبحث عن قيمة المعامل 'url='
         const queryParams = new URLSearchParams(window.location.search);
         let targetUrl = queryParams.get('url');
-
         const outputDiv = document.getElementById('output');
 
+        // خدمة الوسيط لتجاوز مشكلة CORS
+        // نستخدم api.allorigins.win لجلب المحتوى الخام
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+
         if (targetUrl) {
-            // تصحيح الرابط إذا لم يحتوي على http
-            // (بعض الروابط قد تأتي مشفرة أو بدون البروتوكول)
+            // تنظيف الرابط وفك التشفير إذا لزم الأمر
+            targetUrl = decodeURIComponent(targetUrl);
             if (!targetUrl.startsWith('http')) {
-                // قد يكون الرابط مشفراً بـ URL Encode، نفك تشفيره أولاً
-                 // إذا كان الرابط يأتي كما في كودك القديم، قد تحتاج لإضافة https يدوياً
-                 // هنا نفترض أن الرابط يأتي كاملاً أو يحتاج لفك تشفير بسيط
-                 targetUrl = decodeURIComponent(targetUrl);
-                 if(!targetUrl.startsWith('http')) {
-                     targetUrl = 'https://' + targetUrl;
-                 }
+                targetUrl = 'https://' + targetUrl;
             }
 
-            // 2. طلب البيانات من الرابط (Fetch)
-            fetch(targetUrl)
+            // نقوم بتشفير الرابط المستهدف ليتم إرساله كمعامل للوسيط
+            const finalUrl = corsProxy + encodeURIComponent(targetUrl);
+
+            console.log("Requesting:", finalUrl); // للمراقبة في الكونسول
+
+            fetch(finalUrl)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    return response.json(); // نفترض أن البيانات هي JSON
+                    return response.json();
                 })
                 .then(data => {
-                    // 3. عرض البيانات بنجاح
-                    // JSON.stringify(data, null, 4) يقوم بتنسيق الكود بمسافات بادئة (4 مسافات)
-                    outputDiv.innerHTML = JSON.stringify(data, null, 4);
+                    // عرض البيانات بنجاح
+                    outputDiv.innerHTML = `<h3>تم جلب البيانات بنجاح:</h3>` + JSON.stringify(data, null, 4);
                     outputDiv.classList.remove('loading');
                 })
                 .catch(error => {
-                    // معالجة الأخطاء
-                    console.error('Error fetching data:', error);
-                    outputDiv.innerHTML = `<span class="error">فشل في جلب البيانات.<br>السبب: ${error.message}<br><br>تأكد من أن الرابط يعمل ويسمح بـ (CORS).</span>`;
+                    console.error('Error:', error);
+                    outputDiv.innerHTML = `<span class="error">حدث خطأ أثناء جلب البيانات.<br>السبب: ${error.message}<br><br>ملاحظة: تأكد أن الرابط الأصلي يعمل، أحياناً خدمات الفيديو تحجب الوصول إذا لم يكن هناك "User-Agent" معين أو Token.</span>`;
                     outputDiv.classList.remove('loading');
                 });
 
         } else {
-            outputDiv.innerHTML = '<span class="error">لم يتم العثور على رابط (url parameter) في العنوان.</span>';
+            outputDiv.innerHTML = '<span class="error">الرابط مفقود! يرجى إضافة ?url=YOUR_LINK في شريط العنوان.</span>';
             outputDiv.classList.remove('loading');
         }
       })();
