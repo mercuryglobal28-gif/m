@@ -2,7 +2,17 @@
 <html>
 <body>
 <script src="https://allohatv.github.io/insert-player.js"></script>
-<iframe width="560" height="315" src="https://harald-as.stloadi.live/?token_movie=f2a9dfdfcd7b15655447ccbff96fe4&translation=66&token=e7b61f129f4a392ac4bf6726a9dd6a"></iframe>
+<iframe id="myPlayer" allow="autoplay; fullscreen" allowfullscreen></iframe>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const targetUrl = params.get('url') || params.get('src');
+    if (targetUrl) {
+        document.getElementById('myPlayer').src = targetUrl;
+    } else {
+        // رسالة تنبيه بسيطة إذا نسيت وضع الرابط
+        document.body.innerHTML = '<div style="color:white;text-align:center;padding-top:20px;">الرجاء وضع الرابط في العنوان (?url=...)</div>';
+    }
+</script>
 
 </body>
 </html>
