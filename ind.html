@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -14,12 +14,7 @@ const url = params.get("url");
 if (url) {
   const iframe = document.createElement("iframe");
   iframe.src = decodeURIComponent(url);
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  iframe.frameBorder = "0";
-  iframe.allow = "autoplay; fullscreen";
-  iframe.allowFullscreen = true;
-  document.body.appendChild(iframe);
+ 
 } else {
   document.body.innerText = "NO URL";
 }
