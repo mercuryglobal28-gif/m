@@ -3,19 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player</title>
+    <title>Direct Player</title>
     <style>
-        /* تنسيقات الشاشة الكاملة */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        .wrap, .player-wrap, #playerFrame { width: 100%; height: 100%; }
-        iframe { width: 100%; height: 100%; border: none; }
+        /* إعدادات ملء الشاشة تماماً مثل الكود الذي يعمل */
+        html, body {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            background: #0b1020; /* نفس لون الخلفية في الكود الخاص بك */
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .wrap, .player-wrap, #playerFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
     </style>
 </head>
 <body>
 
 <div class="wrap">
   <section class="player-wrap">
-    <div id="playerFrame" class="player-frame"></div>
+    <div id="playerFrame"></div>
   </section>
 </div>
 
@@ -25,30 +39,29 @@
 
 <script>
 (function(){
-    // استخراج الرابط من العنوان
+    // قراءة الرابط من العنوان ?url=...
     const params = new URLSearchParams(location.search);
     const targetUrl = params.get('url');
     
-    // العنصر الذي سنضع فيه الفيديو
     const frame = document.getElementById('playerFrame');
 
     if(targetUrl) {
         // إنشاء الـ iframe
         const iframe = document.createElement('iframe');
         iframe.src = targetUrl;
+        iframe.title = "Video Player";
         iframe.allowFullscreen = true;
-        // خصائص السماح الحديثة
-        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
         
-        // وضع الفيديو داخل الإطار
-        // نستخدم setTimeout لضمان أن يتم التنفيذ بعد تحميل الملف الخارجي
-        setTimeout(() => {
-            frame.innerHTML = ''; 
-            frame.appendChild(iframe);
-        }, 100);
+        // صلاحيات التشغيل
+        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media');
+        
+        // تنظيف المكان وإضافة الفيديو
+        frame.innerHTML = '';
+        frame.appendChild(iframe);
         
     } else {
-        frame.innerHTML = '<div style="color:white; text-align:center; padding-top:20%;">❌ الرابط مفقود</div>';
+        // رسالة في حالة عدم وجود رابط
+        frame.innerHTML = '<div style="color:white; text-align:center; font-family:sans-serif;">❌ لم يتم العثور على رابط URL</div>';
     }
 })();
 </script>
