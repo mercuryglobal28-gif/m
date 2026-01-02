@@ -48,54 +48,6 @@ function extractKP(input){
   return digits ? digits[0] : '';
 }
 
-// دالة إنشاء الأزرار والمشغلات
-async function buildPlayers(id){
-  // الآن سيجد الكود العنصر ولن يعطي خطأ null
-  const switcher = document.getElementById('playerSwitcher');
-  const frame = document.getElementById('playerFrame');
-  
-  // تنظيف المحتوى السابق
-  switcher.innerHTML = ''; 
-  frame.innerHTML = '<div>Загрузка...</div>'; // رسالة تحميل بالروسية
-
-  let created = 0;
-  
-  // المرور على قائمة المشغلات
-  for(const [name, fn] of Object.entries(players)){
-    try{
-      const src = typeof fn === 'function' ? await fn(id) : null;
-      if(!src) continue;
-      
-      // إنشاء زر التبديل
-      const btn = document.createElement('button');
-      btn.className = 'switch-btn'; 
-      btn.type = 'button'; 
-      btn.textContent = name;
-      btn.setAttribute('role', 'tab'); 
-      btn.setAttribute('aria-pressed', 'false');
-      
-      // إضافة حدث عند النقر
-      btn.addEventListener('click', () => {
-        [...switcher.children].forEach(b => b.setAttribute('aria-pressed', 'false'));
-        btn.setAttribute('aria-pressed', 'true'); 
-        showPlayer(src, name);
-      });
-      
-      switcher.appendChild(btn);
-      created++;
-    } catch(e) {
-      console.warn('player build error', name, e);
-    }
-  }
-  
-  if(created === 0){ 
-    frame.innerHTML = '❌ Плееры не найдены'; // رسالة خطأ بالروسية
-    return; 
-  }
-  
-  // النقر تلقائياً على أول زر لتشغيل الفيديو
-  switcher.querySelector('button')?.click();
-}
 
 // دالة عرض المشغل المختار داخل الـ iframe
 function showPlayer(src, name){
@@ -107,8 +59,8 @@ function showPlayer(src, name){
   iframe.allowFullscreen = true; 
   iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
   // تنسيق لملء الإطار
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
+  iframe.style.width = "0%";
+  iframe.style.height = "0%";
   iframe.style.border = "none";
   
   frame.innerHTML = ''; 
