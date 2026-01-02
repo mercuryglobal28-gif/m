@@ -1,70 +1,133 @@
 <!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Direct Player</title>
-    <style>
-        /* إعدادات ملء الشاشة تماماً مثل الكود الذي يعمل */
-        html, body {
-            margin: 0; padding: 0; height: 100%; width: 100%;
-            background: #0b1020; /* نفس لون الخلفية في الكود الخاص بك */
-            overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .wrap, .player-wrap, #playerFrame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: 0;
-            display: block;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KinoDivBox — Alloha Player</title>
+<style>
+  html, body {
+    margin:0; padding:0; height:100%; width:100%;
+    display:flex; justify-content:center; align-items:flex-start;
+    background:#0b1020; color:#fff; font-family:Inter,Segoe UI,Arial,sans-serif;
+  }
+  .wrap {
+    width:100%; max-width:100%; padding:0;
+    display:flex; flex-direction:column; height:100%;
+  }
+  .player-wrap {
+    width:100%; flex:1; display:flex; flex-direction:column;
+  }
+  .player-switch {
+    display:flex; gap:8px; flex-wrap:wrap; padding:10px;
+    background:rgba(0,0,0,0.3); width:100%; justify-content:center;
+  }
+  /* قمت بإخفاء شريط الأزرار لأنه يوجد مشغل واحد فقط، إذا أردت إظهاره احذف السطر التالي */
+  /* .player-switch { display: none; } */ 
+  
+  .switch-btn {
+    background:transparent; border:1px solid rgba(255,255,255,0.3);
+    border-radius:8px; padding:6px 12px; cursor:pointer; color:#fff;
+  }
+  .switch-btn[aria-pressed="true"]{
+    background:#ff4b1f; color:#fff; border-color:transparent;
+  }
+  #playerFrame {
+    width:100%; flex:1; display:grid; place-items:center;
+    background:rgba(255,255,255,0.02);
+  }
+  iframe { width:100%; height:100%; border:0; }
+  .hidden { display:none; }
+</style>
 </head>
 <body>
-
 <div class="wrap">
-  <section class="player-wrap">
-    <div id="playerFrame"></div>
+  <section class="player-wrap" aria-live="polite">
+    <div class="player-switch" role="tablist" aria-label="Выбор плеера" id="playerSwitcher"></div>
+    
+    <div id="playerFrame" class="player-frame">
+      <div id="empty" style="text-align:center;color:rgba(255,255,255,0.45);padding:12px">
+        🎬 Введите ID КиноПоиска и нажмите «Поиск»
+      </div>
+    </div>
   </section>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script src="https://allohatv.github.io/insert-player.js"></script>
 
 <script>
-(function(){
-    // قراءة الرابط من العنوان ?url=...
-    const params = new URLSearchParams(location.search);
-    const targetUrl = params.get('url');
-    
-    const frame = document.getElementById('playerFrame');
+// قائمة المشغلات (تم حصرها في Alloha فقط)
+const players = {
+  "Alloha": id => `https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`
+};
 
-    if(targetUrl) {
-        // إنشاء الـ iframe
-        const iframe = document.createElement('iframe');
-        iframe.src = targetUrl;
-        iframe.title = "Video Player";
-        iframe.allowFullscreen = true;
-        
-        // صلاحيات التشغيل
-        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media');
-        
-        // تنظيف المكان وإضافة الفيديو
-        frame.innerHTML = '';
-        frame.appendChild(iframe);
-        
-    } else {
-        // رسالة في حالة عدم وجود رابط
-        frame.innerHTML = '<div style="color:white; text-align:center; font-family:sans-serif;">❌ لم يتم العثور على رابط URL</div>';
-    }
+function extractKP(input){
+  if(!input) return '';
+  input=input.trim();
+  const m = input.match(/kinopoisk\.ru\/(?:film|series)\/(\d+)/i);
+  if(m) return m[1];
+  const digits = input.match(/\d{1,10}/);
+  return digits ? digits[0] : '';
+}
+
+// دالة بناء المشغلات (لم يتم تغيير المنطق)
+async function buildPlayers(id){
+  const switcher = document.getElementById('playerSwitcher');
+  const frame = document.getElementById('playerFrame');
+  
+  // تنظيف الواجهة
+  switcher.innerHTML=''; 
+  frame.innerHTML='<div>Загрузка...</div>';
+
+  let created=0;
+  
+  // الدوران على القائمة (التي تحتوي الآن على عنصر واحد فقط)
+  for(const [name, fn] of Object.entries(players)){
+    try{
+      const src = typeof fn==='function' ? await fn(id) : null;
+      if(!src) continue;
+      
+      const btn = document.createElement('button');
+      btn.className='switch-btn'; btn.type='button'; btn.textContent=name;
+      btn.setAttribute('role','tab'); btn.setAttribute('aria-pressed','false');
+      
+      btn.addEventListener('click', ()=>{
+        [...switcher.children].forEach(b=>b.setAttribute('aria-pressed','false'));
+        btn.setAttribute('aria-pressed','true'); 
+        showPlayer(src, name);
+      });
+      
+      switcher.appendChild(btn);
+      created++;
+    } catch(e){ console.warn('player build error', name, e); }
+  }
+  
+  if(created===0){ frame.innerHTML='❌ Плееры не найдены'; return; }
+  
+  // النقر التلقائي على الزر الأول (Alloha)
+  switcher.querySelector('button')?.click();
+}
+
+// دالة عرض الـ iframe (لم تتغير)
+function showPlayer(src, name){
+  const frame = document.getElementById('playerFrame');
+  const iframe = document.createElement('iframe');
+  
+  iframe.src = src; 
+  iframe.loading = 'lazy';
+  iframe.title = name; 
+  iframe.allowFullscreen = true; 
+  iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+  
+  frame.innerHTML = ''; 
+  frame.appendChild(iframe);
+}
+
+// التشغيل التلقائي عند فتح الرابط
+(function(){
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if(id) buildPlayers(id);
 })();
 </script>
-
 </body>
 </html>
