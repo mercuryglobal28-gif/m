@@ -4,10 +4,15 @@
 <script src="https://allohatv.github.io/insert-player.js"></script>
 <iframe id="myPlayer" allow="autoplay; fullscreen" allowfullscreen></iframe>
 <script>
-    const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);
     const targetUrl = params.get('url') || params.get('src');
+
+    // 2. إذا وجد الرابط، يضعه داخل الـ iframe
     if (targetUrl) {
         document.getElementById('myPlayer').src = targetUrl;
+    } else {
+        // رسالة تنبيه بسيطة إذا نسيت وضع الرابط
+        document.body.innerHTML = '<div style="color:white;text-align:center;padding-top:20px;">الرجاء وضع الرابط في العنوان (?url=...)</div>';
     }
 </script>
 
