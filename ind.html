@@ -1,30 +1,15 @@
-<!doctype html>
-<html lang="ru">
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KinoDivBox — Alloha Player</title>
+    <title>Пример iframe</title>
 </head>
 <body>
-<div class="wrap">
-  <section class="player-wrap" aria-live="polite">
-    <div class="player-switch" role="tablist" aria-label="Выбор плеера" id="playerSwitcher"></div>
-    
-    <div id="playerFrame" class="player-frame">
-      <div src="https://harald-as.stloadi.live/?token_movie=f2a9dfdfcd7b15655447ccbff96fe4&translation=66&token=e7b61f129f4a392ac4bf6726a9dd6a" >
-        🎬 Введите ID КиноПоиска и нажмите «Поиск»
-      </div>
-    </div>
-  </section>
-</div>
-
 <script src="https://allohatv.github.io/insert-player.js"></script>
+    <h1>Встроенное видео с YouTube</h1>
+    <iframe width="560" height="315" src="https://harald-as.stloadi.live/?token_movie=f2a9dfdfcd7b15655447ccbff96fe4&translation=66&token=e7b61f129f4a392ac4bf6726a9dd6a" frameborder="0" allowfullscreen></iframe>
 
-<script>
-// قائمة المشغلات (تم حصرها في Alloha فقط)
-const players = {
-  "Alloha": id => `https://harald-as.stloadi.live/?token_movie=f2a9dfdfcd7b15655447ccbff96fe4&translation=66&token=e7b61f129f4a392ac4bf6726a9dd6a`
-};
-</script>
+    <h1>Карта Google</h1>
+    <iframe src="www.google.com" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+
 </body>
 </html>
