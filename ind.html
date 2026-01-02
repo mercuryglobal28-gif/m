@@ -8,9 +8,6 @@
     const targetUrl = params.get('url') || params.get('src');
     if (targetUrl) {
         document.getElementById('myPlayer').src = targetUrl;
-    } else {
-        // رسالة تنبيه بسيطة إذا نسيت وضع الرابط
-        document.body.innerHTML = '<div style="color:white;text-align:center;padding-top:20px;">الرجاء وضع الرابط في العنوان (?url=...)</div>';
     }
 </script>
 
