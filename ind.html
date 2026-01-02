@@ -1,12 +1,7 @@
 <!doctype html>
-<html lang="ar">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kino</title>
-</head>
+<html>
 <body>
-
+ <script src="https://allohatv.github.io/insert-player.js"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const url = params.get("url");
@@ -14,7 +9,7 @@ const url = params.get("url");
 if (url) {
   document.write(
     '<iframe src="' + decodeURIComponent(url) + 
-    '" width="0%" height="0%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>'
+    '" width="0%" height="0%" frameborder="0"></iframe>'
   );
 } else {
   document.write("NO URL");
