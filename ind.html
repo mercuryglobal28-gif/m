@@ -20,38 +20,75 @@
 </div>
   <script src="https://allohatv.github.io/insert-player.js"></script>
 <script>
-// دالة لاستخراج المعلمات من الرابط
-function getParameterByName(name) {
-    name = name.replace(/[\[\]]/g, '\\$&');
-    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-        results = regex.exec(window.location.href);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+const players = {
+  "Collaps": id=>`https://api.namy.ws/embed/kp/${id}`,
+  "Alloha": id=>`https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`,
+  "VideoCDN": id=>`https://p.lumex.space/j3mqebEPqCLB?domain=${location.hostname}&kp_id=${id}`,
+  "Vibix": id=>`https://675812196.videoframe2.com/embed-kp/${id}`,
+  "HDVB": async id=>{
+    try{
+      const token='8a22f8e7684404c3815e3ffa940f00a0';
+      const url=`https://apivb.com/api/videos.json?id_kp=${id}&token=${token}`;
+      const res = await fetch(url);
+      if(!res.ok) return null;
+      const data = await res.json();
+      if(Array.isArray(data)&&data.length>0&&data[0].iframe_url) return data[0].iframe_url;
+    }catch(e){console.warn('HDVB fetch failed',e);}
+    return null;
+  },
+  "Kodik": id=>`https://kodik.cc/find-player?kinopoiskID=${id}`,
+  "Трейлер": id=>`https://api.atomics.ws/embed/trailer-kp/${id}`
+};
+
+function extractKP(input){
+  if(!input) return '';
+  input=input.trim();
+  const m = input.match(/kinopoisk\.ru\/(?:film|series)\/(\d+)/i);
+  if(m) return m[1];
+  const digits = input.match(/\d{1,10}/);
+  return digits ? digits[0] : '';
 }
 
-// الوظيفة الرئيسية
-(function(){
-  // 1. جلب رابط الـ iframe من الرابط الأساسي
-  // مثال: ?iframe=https://larkin-as.stloadi.live/...
-  const iframeSrc = getParameterByName('iframe');
-  
+// Создание плееров
+async function buildPlayers(id){
+  const switcher = document.getElementById('playerSwitcher');
   const frame = document.getElementById('playerFrame');
+  switcher.innerHTML=''; frame.innerHTML='<div>Загрузка...</div>';
 
-  if(iframeSrc) {
-    // 2. إذا وجد الرابط، قم بإنشاء الـ iframe
-    frame.innerHTML = ''; // مسح رسالة التحميل
-    const iframe = document.createElement('iframe');
-    iframe.src = iframeSrc;
-    iframe.loading = 'lazy';
-    iframe.title = 'Alloha Player';
-    iframe.setAttribute('allowfullscreen', '');
-    iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
-    frame.appendChild(iframe);
-  } else {
-    // 3. إذا لم يوجد رابط في العنوان
-    frame.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.45);padding:20px">❌ لم يتم توفير رابط iframe</div>';
+  let created=0;
+  for(const [name, fn] of Object.entries(players)){
+    try{
+      const src = typeof fn==='function'?await fn(id):null;
+      if(!src) continue;
+      const btn = document.createElement('button');
+      btn.className='switch-btn'; btn.type='button'; btn.textContent=name;
+      btn.setAttribute('role','tab'); btn.setAttribute('aria-pressed','false');
+      btn.addEventListener('click', ()=>{
+        [...switcher.children].forEach(b=>b.setAttribute('aria-pressed','false'));
+        btn.setAttribute('aria-pressed','true'); showPlayer(src,name);
+      });
+      switcher.appendChild(btn);
+      created++;
+    }catch(e){console.warn('player build error',name,e);}
   }
+  if(created===0){ frame.innerHTML='❌ Плееры не найдены'; return; }
+  switcher.querySelector('button')?.click();
+}
+
+// Показ выбранного плеера
+function showPlayer(src,name){
+  const frame = document.getElementById('playerFrame');
+  const iframe=document.createElement('iframe');
+  iframe.src=src; iframe.loading='lazy';
+  iframe.title=name; iframe.allowFullscreen=''; iframe.setAttribute('allow','autoplay; fullscreen; picture-in-picture');
+  frame.innerHTML=''; frame.appendChild(iframe);
+}
+
+// Загрузка из URL
+(function(){
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id');
+  if(id) buildPlayers(id);
 })();
 </script>
 </body>
