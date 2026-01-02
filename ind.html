@@ -9,21 +9,38 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://allohatv.github.io/insert-player.js"></script>
 <script>
-const params = new URLSearchParams(location.search);
-const url = params.get("url");
-
-if (url) {
-  const iframe = document.createElement("iframe");
-  iframe.src = decodeURIComponent(url);
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  iframe.frameBorder = "0";
-  iframe.allow = "autoplay; fullscreen";
-  iframe.allowFullscreen = true;
-  document.body.appendChild(iframe);
-} else {
-  document.body.innerText = "NO URL";
+function extractKP(input){
+  if(!input) return '';
+  input = input.trim();
+  const m = input.match(/kinopoisk\.ru\/(?:film|series)\/(\d+)/i);
+  if(m) return m[1];
+  const digits = input.match(/\d{1,10}/);
+  return digits ? digits[0] : '';
 }
+
+function loadAlloha(id){
+  const frame = document.getElementById('playerFrame');
+  const src = `https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`;
+
+  const iframe = document.createElement('iframe');
+  iframe.src = src;
+  iframe.loading = 'lazy';
+  iframe.allowFullscreen = true;
+  iframe.setAttribute(
+    'allow',
+    'autoplay; fullscreen; picture-in-picture'
+  );
+
+  frame.innerHTML = '';
+  frame.appendChild(iframe);
+}
+
+// تحميل ID من الرابط
+(function(){
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if(id) loadAlloha(id);
+})();
 </script>
 
 </body>
