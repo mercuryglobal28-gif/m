@@ -1,83 +1,56 @@
 <!doctype html>
 <html lang="ru">
+<head>
+<meta charset="UTF-8">
+<style>
+    /* تنسيقات ضرورية لجعل الفيديو يملأ الشاشة */
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+    .wrap, .player-wrap, #playerFrame { width: 100%; height: 100%; }
+</style>
+</head>
 <body>
+
 <div class="wrap">
-  <section class="player-wrap">
-    <div id="playerFrame" class="player-frame" ></div>
-  </section>
+  <section class="player-wrap">
+    <div id="playerFrame" class="player-frame"></div>
+  </section>
 </div>
-
 <script src="https://allohatv.github.io/insert-player.js"></script>
-
 <script>
-const players = {
-  "Alloha": url => `${url}`
-};
-
-// دالة استخراج المعرف
-function extractKP(input){
-  if(!input) return '';
-  input = input.trim();
-  const m = input.match(/kinopoisk\.ru\/(?:film|series)\/(\d+)/i);
-  if(m) return m[1];
-  const digits = input.match(/\d{1,10}/);
-  return digits ? digits[0] : '';
-}
-
-// التعديل الرئيسي هنا: تحميل مباشر بدون أزرار
-async function buildPlayers(id){
-  const frame = document.getElementById('playerFrame');
-  frame.innerHTML = '<div>Загрузка...</div>'; // جاري التحميل
-
-  // المرور على قائمة المشغلات
-  for(const [name, fn] of Object.entries(players)){
-    try{
-      // محاولة جلب الرابط
-      const src = typeof fn === 'function' ? await fn(id) : null;
-      
-      // إذا تم العثور على رابط صالح
-      if(src) {
-        // 1. اعرض المشغل فوراً
-        showPlayer(src, name);
-        // 2. أوقف الدالة هنا (لا حاجة للبحث عن مشغلات أخرى)
-        return; 
-      }
-      
-    } catch(e) {
-      console.warn('player build error', name, e);
-    }
-  }
-
-  // إذا وصلنا إلى هنا، فهذا يعني أنه لم يتم العثور على أي مشغل صالح
-  frame.innerHTML = '❌ Плееры не найдены';
-}
-
-// دالة العرض (لم تتغير)
-function showPlayer(src, name){
-  const frame = document.getElementById('playerFrame');
-  const iframe = document.createElement('iframe');
-  iframe.src = src; 
-  iframe.loading = 'lazy';
-  iframe.title = name; 
-  iframe.allowFullscreen = true; 
-  iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
-  
-  // تنسيقات الـ iframe
-  iframe.style.width = "0%";
-  iframe.style.height = "0%";
-  iframe.style.border = "none";
-  
-  frame.innerHTML = ''; 
-  frame.appendChild(iframe);
-}
-
-// التشغيل التلقائي
+// دالة التشغيل المباشرة
 (function(){
-  const params = new URLSearchParams(location.search);
-  const id = params.get('url');
-  if(url) buildPlayers(url);
+  // 1. جلب الرابط من العنوان
+  const params = new URLSearchParams(location.search);
+  const targetUrl = params.get('url'); // نبحث عن ?url=...
+  
+  const frame = document.getElementById('playerFrame');
+
+  // 2. التحقق من وجود الرابط
+  if(targetUrl) {
+      // إنشاء الـ iframe مباشرة
+      const iframe = document.createElement('iframe');
+      iframe.src = targetUrl;
+      iframe.title = "Video Player";
+      
+      // إعدادات الشاشة الكاملة والتشغيل
+      iframe.allowFullscreen = true;
+      iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+      
+      // التعديل الأهم: جعل الأبعاد 100% بدلاً من 0%
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "none";
+      
+      // إضافة الـ iframe للصفحة
+      frame.innerHTML = '';
+      frame.appendChild(iframe);
+      
+  } else {
+      // رسالة في حال لم يتم وضع رابط
+      frame.innerHTML = '<div style="color:white; text-align:center; padding-top:20%;">❌ الرابط غير موجود<br>تأكد من استخدام ?url=YOUR_LINK</div>';
+  }
 })();
 </script>
-  
+  
 </body>
-</html>   
+</html>
