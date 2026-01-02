@@ -7,37 +7,14 @@
 <body>
 <div class="wrap">
   <section class="player-wrap">
-    <div class="player-switch" id="playerSwitcher">
-        <button class="switch-btn active" type="button">Alloha</button>
-    </div>
     
     <div id="playerFrame" class="player-frame">
-      <div id="empty" style="text-align:center;color:rgba(255,255,255,0.45);padding:12px">
-        جاري تحميل المشغل...
-      </div>
-    </div>
   </section>
 </div>
   <script src="https://allohatv.github.io/insert-player.js"></script>
 <script>
 const players = {
-  "Collaps": id=>`https://api.namy.ws/embed/kp/${id}`,
-  "Alloha": id=>`https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`,
-  "VideoCDN": id=>`https://p.lumex.space/j3mqebEPqCLB?domain=${location.hostname}&kp_id=${id}`,
-  "Vibix": id=>`https://675812196.videoframe2.com/embed-kp/${id}`,
-  "HDVB": async id=>{
-    try{
-      const token='8a22f8e7684404c3815e3ffa940f00a0';
-      const url=`https://apivb.com/api/videos.json?id_kp=${id}&token=${token}`;
-      const res = await fetch(url);
-      if(!res.ok) return null;
-      const data = await res.json();
-      if(Array.isArray(data)&&data.length>0&&data[0].iframe_url) return data[0].iframe_url;
-    }catch(e){console.warn('HDVB fetch failed',e);}
-    return null;
-  },
-  "Kodik": id=>`https://kodik.cc/find-player?kinopoiskID=${id}`,
-  "Трейлер": id=>`https://api.atomics.ws/embed/trailer-kp/${id}`
+  "Alloha": id=>`https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`
 };
 
 function extractKP(input){
