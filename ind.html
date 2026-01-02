@@ -1,80 +1,83 @@
 <!doctype html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player</title>
-    <style>
-        /* تنسيقات لضمان ظهور الفيديو بملء الشاشة */
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            height: 100%; 
-            width: 100%; 
-            background-color: #000; /* خلفية سوداء */
-            overflow: hidden; 
-        }
-        .wrap, .player-wrap, .player-frame {
-            width: 100%;
-            height: 100%;
-        }
-        /* تنسيق رسالة الخطأ */
-        .error-msg {
-            color: white;
-            text-align: center;
-            margin-top: 20%;
-            font-family: sans-serif;
-        }
-    </style>
-</head>
 <body>
-
 <div class="wrap">
-  <section class="player-wrap">
-    <div id="playerFrame" class="player-frame"></div>
-  </section>
+  <section class="player-wrap">
+    <div id="playerFrame" class="player-frame" ></div>
+  </section>
 </div>
+
 <script src="https://allohatv.github.io/insert-player.js"></script>
 
 <script>
-// دالة التشغيل الرئيسية
+const players = {
+  "Alloha": url => `${url}`
+};
+
+// دالة استخراج المعرف
+function extractKP(input){
+  if(!input) return '';
+  input = input.trim();
+  const m = input.match(/kinopoisk\.ru\/(?:film|series)\/(\d+)/i);
+  if(m) return m[1];
+  const digits = input.match(/\d{1,10}/);
+  return digits ? digits[0] : '';
+}
+
+// التعديل الرئيسي هنا: تحميل مباشر بدون أزرار
+async function buildPlayers(id){
+  const frame = document.getElementById('playerFrame');
+  frame.innerHTML = '<div>Загрузка...</div>'; // جاري التحميل
+
+  // المرور على قائمة المشغلات
+  for(const [name, fn] of Object.entries(players)){
+    try{
+      // محاولة جلب الرابط
+      const src = typeof fn === 'function' ? await fn(id) : null;
+      
+      // إذا تم العثور على رابط صالح
+      if(src) {
+        // 1. اعرض المشغل فوراً
+        showPlayer(src, name);
+        // 2. أوقف الدالة هنا (لا حاجة للبحث عن مشغلات أخرى)
+        return; 
+      }
+      
+    } catch(e) {
+      console.warn('player build error', name, e);
+    }
+  }
+
+  // إذا وصلنا إلى هنا، فهذا يعني أنه لم يتم العثور على أي مشغل صالح
+  frame.innerHTML = '❌ Плееры не найдены';
+}
+
+// دالة العرض (لم تتغير)
+function showPlayer(src, name){
+  const frame = document.getElementById('playerFrame');
+  const iframe = document.createElement('iframe');
+  iframe.src = src; 
+  iframe.loading = 'lazy';
+  iframe.title = name; 
+  iframe.allowFullscreen = true; 
+  iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+  
+  // تنسيقات الـ iframe
+  iframe.style.width = "0%";
+  iframe.style.height = "0%";
+  iframe.style.border = "none";
+  
+  frame.innerHTML = ''; 
+  frame.appendChild(iframe);
+}
+
+// التشغيل التلقائي
 (function(){
-    // 1. قراءة متغيرات الرابط
-    const params = new URLSearchParams(location.search);
-    
-    // 2. استخراج الرابط المباشر من المتغير "url"
-    // مثال: ?url=https://example.com/video
-    const targetUrl = params.get('url');
-
-    const frame = document.getElementById('playerFrame');
-
-    // التحقق من وجود الرابط
-    if(targetUrl) {
-        // إنشاء عنصر iframe
-        const iframe = document.createElement('iframe');
-        
-        iframe.src = targetUrl; 
-        iframe.title = "Video Player";
-        iframe.allowFullscreen = true;
-        
-        // إعدادات السماح (تشغيل تلقائي، ملء الشاشة، صورة داخل صورة)
-        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
-        
-        // تنسيقات الـ iframe ليملأ المكان
-        iframe.style.width = "100%";
-        iframe.style.height = "100%";
-        iframe.style.border = "none";
-        
-        // تنظيف الإطار وإضافة المشغل الجديد
-        frame.innerHTML = ''; 
-        frame.appendChild(iframe);
-        
-    } else {
-        // في حال لم يتم وضع رابط في العنوان
-        frame.innerHTML = '<div class="error-msg">❌ لم يتم العثور على رابط.<br>يرجى استخدام الصيغة: ?url=YOUR_LINK_HERE</div>';
-    }
+  const params = new URLSearchParams(location.search);
+  const id = params.get('url');
+  if(url) buildPlayers(url);
 })();
 </script>
-  
+  
 </body>
-</html>
+</html>   
