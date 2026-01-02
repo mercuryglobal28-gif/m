@@ -1,10 +1,15 @@
 <!doctype html>
 <html lang="ru">
-<html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KinoDivBox — Агрегатор плееров</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player</title>
+    <style>
+        /* تنسيقات الشاشة الكاملة */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        .wrap, .player-wrap, #playerFrame { width: 100%; height: 100%; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
 </head>
 <body>
 
@@ -13,42 +18,40 @@
     <div id="playerFrame" class="player-frame"></div>
   </section>
 </div>
-<script src="https://allohatv.github.io/insert-player.js"></script>
-<script>
-// دالة التشغيل المباشرة
-(function(){
-  // 1. جلب الرابط من العنوان
-  const params = new URLSearchParams(location.search);
-  const targetUrl = params.get('url'); // نبحث عن ?url=...
-  
-  const frame = document.getElementById('playerFrame');
 
-  // 2. التحقق من وجود الرابط
-  if(targetUrl) {
-      // إنشاء الـ iframe مباشرة
-      const iframe = document.createElement('iframe');
-      iframe.src = targetUrl;
-      iframe.title = "Video Player";
-      
-      // إعدادات الشاشة الكاملة والتشغيل
-      iframe.allowFullscreen = true;
-      iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
-      
-      // التعديل الأهم: جعل الأبعاد 100% بدلاً من 0%
-      iframe.style.width = "100%";
-      iframe.style.height = "100%";
-      iframe.style.border = "none";
-      
-      // إضافة الـ iframe للصفحة
-      frame.innerHTML = '';
-      frame.appendChild(iframe);
-      
-  } else {
-      // رسالة في حال لم يتم وضع رابط
-      frame.innerHTML = '<div style="color:white; text-align:center; padding-top:20%;">❌ الرابط غير موجود<br>تأكد من استخدام ?url=YOUR_LINK</div>';
-  }
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://allohatv.github.io/insert-player.js"></script>
+
+<script>
+(function(){
+    // استخراج الرابط من العنوان
+    const params = new URLSearchParams(location.search);
+    const targetUrl = params.get('url');
+    
+    // العنصر الذي سنضع فيه الفيديو
+    const frame = document.getElementById('playerFrame');
+
+    if(targetUrl) {
+        // إنشاء الـ iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = targetUrl;
+        iframe.allowFullscreen = true;
+        // خصائص السماح الحديثة
+        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+        
+        // وضع الفيديو داخل الإطار
+        // نستخدم setTimeout لضمان أن يتم التنفيذ بعد تحميل الملف الخارجي
+        setTimeout(() => {
+            frame.innerHTML = ''; 
+            frame.appendChild(iframe);
+        }, 100);
+        
+    } else {
+        frame.innerHTML = '<div style="color:white; text-align:center; padding-top:20%;">❌ الرابط مفقود</div>';
+    }
 })();
 </script>
-  
+
 </body>
 </html>
