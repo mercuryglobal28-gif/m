@@ -2,77 +2,131 @@
 <html lang="ar" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <title>JSON Viewer (Fixed CORS)</title>
+    <title>Video Data Extractor</title>
     <style>
-        body {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            padding: 20px;
-        }
-        #output {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            background-color: #252526;
-            padding: 15px;
+        body { background-color: #1e1e1e; color: #d4d4d4; font-family: monospace; padding: 20px; }
+        #status { margin-bottom: 10px; color: #569cd6; }
+        #output { 
+            white-space: pre-wrap; 
+            background-color: #252526; 
+            padding: 15px; 
+            border: 1px solid #3e3e42; 
             border-radius: 5px;
-            border: 1px solid #3e3e42;
         }
-        .error { color: #ff6b6b; font-weight: bold; }
-        .loading { color: #4ec9b0; }
-        h3 { margin-top: 0; color: #569cd6; }
+        .error { color: #ff6b6b; border-color: #ff6b6b; }
+        .success { border-color: #4ec9b0; color: #b5cea8; }
+        button {
+            padding: 10px 20px; background-color: #0e639c; color: white; border: none; cursor: pointer; margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="output" class="loading">جاري جلب البيانات عبر الوسيط...</div>
-<script src="https://allohatv.github.io/insert-player.js"></script>
+    <div id="status">جاري البحث عن بيانات الفيديو...</div>
+    <div id="output">...</div>
+
     <script>
-      (function() {
+    (function() {
         const queryParams = new URLSearchParams(window.location.search);
         let targetUrl = queryParams.get('url');
         const outputDiv = document.getElementById('output');
+        const statusDiv = document.getElementById('status');
+        const corsProxy = 'https://corsproxy.io/?';
 
-        // خدمة الوسيط لتجاوز مشكلة CORS
-        // نستخدم api.allorigins.win لجلب المحتوى الخام
-        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        // دالة لاستخراج كائن JSON من وسط نص عشوائي بناءً على كلمة مفتاحية
+        function extractJsonSurroundingKeyword(text, keyword) {
+            const keyIndex = text.indexOf(keyword);
+            if (keyIndex === -1) return null;
 
-        if (targetUrl) {
-            // تنظيف الرابط وفك التشفير إذا لزم الأمر
-            targetUrl = decodeURIComponent(targetUrl);
-            if (!targetUrl.startsWith('http')) {
-                targetUrl = 'https://' + targetUrl;
+            // 1. البحث للخلف عن بداية الكائن '{'
+            let startIndex = -1;
+            let bracketCount = 0;
+            // نعود للخلف من مكان الكلمة المفتاحية لنبحث عن أقرب قوس فتح
+            // هذه طريقة تقريبية، نفترض أن الكائن يبدأ قبل الكلمة بمسافة معقولة
+            for (let i = keyIndex; i >= 0; i--) {
+                if (text[i] === '{') {
+                    // تحقق مبدئي: هل هذا القوس هو بداية الكائن الذي يحتوي الكلمة؟
+                    // سنبدأ العد من هنا
+                    startIndex = i;
+                    // لنتأكد أنه ليس قوساً داخلياً، سنحتاج لمنطق أكثر تعقيداً، 
+                    // لكن في مشغلات الفيديو عادة يكون المتغير واضحاً مثل var x = { ... }
+                    
+                    // تحسين: لنبحث عن علامة '=' أو ':' قبل القوس للتأكد أنه بداية تعريف
+                    break; 
+                }
             }
 
-            // نقوم بتشفير الرابط المستهدف ليتم إرساله كمعامل للوسيط
+            if (startIndex === -1) return null;
+
+            // 2. البحث للأمام لتحديد نهاية الكائن '}'
+            // نستخدم خوارزمية موازنة الأقواس
+            let openBrackets = 0;
+            let endIndex = -1;
+            
+            for (let i = startIndex; i < text.length; i++) {
+                if (text[i] === '{') openBrackets++;
+                if (text[i] === '}') openBrackets--;
+
+                if (openBrackets === 0) {
+                    endIndex = i + 1; // +1 لنشمل القوس الأخير
+                    break;
+                }
+            }
+
+            if (endIndex !== -1) {
+                let jsonStr = text.substring(startIndex, endIndex);
+                // تنظيف بسيط: أحياناً يكون JSON غير قياسي (مفاتيح بدون علامات تنصيص)
+                // هنا سنحاول إعادته كما هو أو تصحيحه
+                return jsonStr;
+            }
+            return null;
+        }
+
+        if (targetUrl) {
+            targetUrl = decodeURIComponent(targetUrl);
+            if (!targetUrl.startsWith('http')) targetUrl = 'https://' + targetUrl;
+            
             const finalUrl = corsProxy + encodeURIComponent(targetUrl);
 
-            console.log("Requesting:", finalUrl); // للمراقبة في الكونسول
-
             fetch(finalUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // عرض البيانات بنجاح
-                    outputDiv.innerHTML = `<h3>تم جلب البيانات بنجاح:</h3>` + JSON.stringify(data, null, 4);
-                    outputDiv.classList.remove('loading');
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    outputDiv.innerHTML = `<span class="error">حدث خطأ أثناء جلب البيانات.<br>السبب: ${error.message}<br><br>ملاحظة: تأكد أن الرابط الأصلي يعمل، أحياناً خدمات الفيديو تحجب الوصول إذا لم يكن هناك "User-Agent" معين أو Token.</span>`;
-                    outputDiv.classList.remove('loading');
-                });
+                .then(res => res.text())
+                .then(htmlText => {
+                    // الكلمة المفتاحية التي نبحث عنها في الكود
+                    const keyword = '"hlsSource"'; 
+                    
+                    // محاولة استخراج الكود
+                    let extractedData = extractJsonSurroundingKeyword(htmlText, keyword);
 
+                    if (extractedData) {
+                        statusDiv.innerText = "تم العثور على البيانات واستخراجها!";
+                        statusDiv.style.color = "#4ec9b0";
+                        
+                        // محاولة تنسيقه كـ JSON
+                        try {
+                            const parsed = JSON.parse(extractedData);
+                            outputDiv.innerHTML = JSON.stringify(parsed, null, 4);
+                            outputDiv.className = "success";
+                        } catch (e) {
+                            // إذا فشل التحليل (بسبب صيغة جافاسكريبت غير قياسية)، نعرض النص المستخرج كما هو
+                            outputDiv.innerText = "// لم نتمكن من تحويل النص إلى JSON قياسي، لكن هذا هو الكود المستخرج:\n\n" + extractedData;
+                            outputDiv.className = "success";
+                        }
+                    } else {
+                        throw new Error("لم يتم العثور على كلمة 'hlsSource' داخل كود الصفحة HTML.");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    statusDiv.innerText = "فشل الاستخراج";
+                    statusDiv.style.color = "#f44336";
+                    outputDiv.innerHTML = `<span class="error">${err.message}<br>قد تكون البيانات يتم تحميلها عبر Ajax محمي وليس موجودة في كود الصفحة المصدري.</span>`;
+                    outputDiv.className = "error";
+                });
         } else {
-            outputDiv.innerHTML = '<span class="error">الرابط مفقود! يرجى إضافة ?url=YOUR_LINK في شريط العنوان.</span>';
-            outputDiv.classList.remove('loading');
+            statusDiv.innerText = "بانتظار الرابط...";
+            outputDiv.innerText = "أضف ?url=YOUR_IFRAME_LINK في العنوان";
         }
-      })();
+    })();
     </script>
 </body>
 </html>
