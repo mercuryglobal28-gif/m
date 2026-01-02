@@ -4,8 +4,7 @@
 
 <div class="wrap">
   <section class="player-wrap">
-    <div id="playerFrame" class="player-frame"></div>
-    <pre id="result">جاري الاتصال...</pre>
+    <div id="playerFrame" class="player-frame" hidden></div>
   </section>
 </div>
 
@@ -80,51 +79,6 @@ function showPlayer(src, name){
   if(id) buildPlayers(id);
 })();
 </script>
-  <script>
-async function getJsonData() {
-    const url = 'https://harald-as.newplayjj.com/bnsi/movies/1104882';
-    
-    // إعداد البيانات التي سيتم إرسالها (Body)
-    const data = new URLSearchParams();
-    data.append('token', 'e7b61f129f4a392ac4bf6726a9dd6a');
-    data.append('av1', 'true');
-    data.append('autoplay', '0');
-    data.append('audio', '');
-    data.append('subtitle', '');
-
-    try {
-        const response = await fetch(url, {
-            method: 'POST', // نوع الطلب كما في curl
-            headers: {
-                'accept': '*/*',
-                'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                // الهيدر الخطير: هذا الكود سيتغير مع كل جلسة ولن يعمل إذا كان قديماً
-                'borth': '5f08b7396b8a6bf8d893ec1a0a1a0dc1d19b7e6f20542b999e8689e3fa6776f4|SWRKenV2MGdvejR8MTc2NzMxNzc1OHxUampaSXZHbGliMnVFN25rdDdOYnpsXzdsbU41R0VrUkVONmtxRlp0UFZR',
-                'origin': 'https://harald-as.newplayjj.com',
-                'referer': 'https://harald-as.newplayjj.com/?kp=687&token=e7b61f129f4a392ac4bf6726a9dd6a',
-                'x-requested-with': 'XMLHttpRequest'
-            },
-            body: data
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const jsonData = await response.json();
-        
-        // عرض النتيجة في الصفحة
-        document.getElementById('result').textContent = JSON.stringify(jsonData, null, 2);
-        console.log(jsonData); // عرض النتيجة في الكونسول أيضاً
-
-    } catch (error) {
-        document.getElementById('result').textContent = 'فشل الطلب: ' + error.message + '\n\nالسبب غالباً: سياسة CORS أو انتهاء صلاحية التوكن.';
-        console.error('Fetch error:', error);
-    }
-}
-
-// تنفيذ الدالة
-getJsonData();
-</script>
+  
 </body>
 </html>
