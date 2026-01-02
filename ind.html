@@ -1,10 +1,20 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Player</title>
+</head>
 <body>
 
+<script src="https://allohatv.github.io/insert-player.js"></script>
+
 <iframe id="myPlayer" allow="autoplay; fullscreen" allowfullscreen></iframe>
+
 <script>
-  const params = new URLSearchParams(window.location.search);
+    // 1. البحث عن الرابط في شريط العنوان
+    // يبحث عن ?url= أو ?src=
+    const params = new URLSearchParams(window.location.search);
     const targetUrl = params.get('url') || params.get('src');
 
     // 2. إذا وجد الرابط، يضعه داخل الـ iframe
@@ -15,6 +25,6 @@
         document.body.innerHTML = '<div style="color:white;text-align:center;padding-top:20px;">الرجاء وضع الرابط في العنوان (?url=...)</div>';
     }
 </script>
-<script src="https://allohatv.github.io/insert-player.js"></script>
+
 </body>
 </html>
