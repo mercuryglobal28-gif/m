@@ -2,43 +2,30 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>Player Switcher</title>
+<title>Direct Player</title>
 <style>
-  /* إضافة بعض التنسيقات البسيطة للأزرار لتبدو أفضل */
-  .switch-btn {
-    margin: 5px;
-    padding: 8px 15px;
-    cursor: pointer;
-  }
-  .switch-btn[aria-pressed="true"] {
-    background-color: #007bff;
-    color: white;
-    border: 1px solid #0056b3;
-  }
+    /* تنسيق بسيط لملء الصفحة */
+    body, html { margin: 0; padding: 0; height: 100%; background: #000; }
+    .wrap, .player-wrap, .player-frame { width: 100%; height: 100%; }
+    .player-frame { display: flex; align-items: center; justify-content: center; color: #fff; font-family: sans-serif; }
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <section class="player-wrap">
-    
-    <div id="playerSwitcher" class="player-switcher"></div>
-
     <div id="playerFrame" class="player-frame"></div>
-    
   </section>
 </div>
 
 <script src="https://allohatv.github.io/insert-player.js"></script>
 
 <script>
-// تعريف مصادر المشغلات
 const players = {
-  // استخدام دالة لاسترجاع الرابط بناءً على ID
   "Alloha": id => `https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`
 };
 
-// دالة استخراج المعرف (Kinopoisk ID) من الرابط أو النص
+// دالة استخراج المعرف
 function extractKP(input){
   if(!input) return '';
   input = input.trim();
@@ -48,8 +35,35 @@ function extractKP(input){
   return digits ? digits[0] : '';
 }
 
+// التعديل الرئيسي هنا: تحميل مباشر بدون أزرار
+async function buildPlayers(id){
+  const frame = document.getElementById('playerFrame');
+  frame.innerHTML = '<div>Загрузка...</div>'; // جاري التحميل
 
-// دالة عرض المشغل المختار داخل الـ iframe
+  // المرور على قائمة المشغلات
+  for(const [name, fn] of Object.entries(players)){
+    try{
+      // محاولة جلب الرابط
+      const src = typeof fn === 'function' ? await fn(id) : null;
+      
+      // إذا تم العثور على رابط صالح
+      if(src) {
+        // 1. اعرض المشغل فوراً
+        showPlayer(src, name);
+        // 2. أوقف الدالة هنا (لا حاجة للبحث عن مشغلات أخرى)
+        return; 
+      }
+      
+    } catch(e) {
+      console.warn('player build error', name, e);
+    }
+  }
+
+  // إذا وصلنا إلى هنا، فهذا يعني أنه لم يتم العثور على أي مشغل صالح
+  frame.innerHTML = '❌ Плееры не найдены';
+}
+
+// دالة العرض (لم تتغير)
 function showPlayer(src, name){
   const frame = document.getElementById('playerFrame');
   const iframe = document.createElement('iframe');
@@ -58,25 +72,21 @@ function showPlayer(src, name){
   iframe.title = name; 
   iframe.allowFullscreen = true; 
   iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
-  // تنسيق لملء الإطار
-  iframe.style.width = "0%";
-  iframe.style.height = "0%";
+  
+  // تنسيقات الـ iframe
+  iframe.style.width = "100%";
+  iframe.style.height = "100%";
   iframe.style.border = "none";
   
   frame.innerHTML = ''; 
   frame.appendChild(iframe);
 }
 
-// التنفيذ الفوري عند تحميل الصفحة
+// التشغيل التلقائي
 (function(){
   const params = new URLSearchParams(location.search);
-  const id = params.get('id'); // جلب المعرف من رابط الصفحة
+  const id = params.get('id');
   if(id) buildPlayers(id);
-  else {
-      // للتجربة فقط: إذا لم يكن هناك ID في الرابط، سنضع واحداً افتراضياً
-      // يمكنك حذف هذا السطر لاحقاً
-      console.log("No ID found in URL, waiting for input...");
-  }
 })();
 </script>
 </body>
