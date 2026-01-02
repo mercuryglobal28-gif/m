@@ -2,70 +2,129 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-
+<title>Player Switcher</title>
+<style>
+  /* إضافة بعض التنسيقات البسيطة للأزرار لتبدو أفضل */
+  .switch-btn {
+    margin: 5px;
+    padding: 8px 15px;
+    cursor: pointer;
+  }
+  .switch-btn[aria-pressed="true"] {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #0056b3;
+  }
+</style>
 </head>
 <body>
+
 <div class="wrap">
   <section class="player-wrap">
     
-    <div id="playerFrame" class="player-frame">
+    <div id="playerSwitcher" class="player-switcher"></div>
+
+    <div id="playerFrame" class="player-frame"></div>
+    
   </section>
 </div>
-  <script src="https://allohatv.github.io/insert-player.js"></script>
+
+<script src="https://allohatv.github.io/insert-player.js"></script>
+
 <script>
+// تعريف مصادر المشغلات
 const players = {
-  "Alloha": id=>`https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`
+  // استخدام دالة لاسترجاع الرابط بناءً على ID
+  "Alloha": id => `https://harald-as.newplayjj.com/?kp=${id}&token=e7b61f129f4a392ac4bf6726a9dd6a`
 };
 
+// دالة استخراج المعرف (Kinopoisk ID) من الرابط أو النص
 function extractKP(input){
   if(!input) return '';
-  input=input.trim();
+  input = input.trim();
   const m = input.match(/kinopoisk\.ru\/(?:film|series)\/(\d+)/i);
   if(m) return m[1];
   const digits = input.match(/\d{1,10}/);
   return digits ? digits[0] : '';
 }
 
-// Создание плееров
+// دالة إنشاء الأزرار والمشغلات
 async function buildPlayers(id){
+  // الآن سيجد الكود العنصر ولن يعطي خطأ null
   const switcher = document.getElementById('playerSwitcher');
   const frame = document.getElementById('playerFrame');
-  switcher.innerHTML=''; frame.innerHTML='<div>Загрузка...</div>';
+  
+  // تنظيف المحتوى السابق
+  switcher.innerHTML = ''; 
+  frame.innerHTML = '<div>Загрузка...</div>'; // رسالة تحميل بالروسية
 
-  let created=0;
+  let created = 0;
+  
+  // المرور على قائمة المشغلات
   for(const [name, fn] of Object.entries(players)){
     try{
-      const src = typeof fn==='function'?await fn(id):null;
+      const src = typeof fn === 'function' ? await fn(id) : null;
       if(!src) continue;
+      
+      // إنشاء زر التبديل
       const btn = document.createElement('button');
-      btn.className='switch-btn'; btn.type='button'; btn.textContent=name;
-      btn.setAttribute('role','tab'); btn.setAttribute('aria-pressed','false');
-      btn.addEventListener('click', ()=>{
-        [...switcher.children].forEach(b=>b.setAttribute('aria-pressed','false'));
-        btn.setAttribute('aria-pressed','true'); showPlayer(src,name);
+      btn.className = 'switch-btn'; 
+      btn.type = 'button'; 
+      btn.textContent = name;
+      btn.setAttribute('role', 'tab'); 
+      btn.setAttribute('aria-pressed', 'false');
+      
+      // إضافة حدث عند النقر
+      btn.addEventListener('click', () => {
+        [...switcher.children].forEach(b => b.setAttribute('aria-pressed', 'false'));
+        btn.setAttribute('aria-pressed', 'true'); 
+        showPlayer(src, name);
       });
+      
       switcher.appendChild(btn);
       created++;
-    }catch(e){console.warn('player build error',name,e);}
+    } catch(e) {
+      console.warn('player build error', name, e);
+    }
   }
-  if(created===0){ frame.innerHTML='❌ Плееры не найдены'; return; }
+  
+  if(created === 0){ 
+    frame.innerHTML = '❌ Плееры не найдены'; // رسالة خطأ بالروسية
+    return; 
+  }
+  
+  // النقر تلقائياً على أول زر لتشغيل الفيديو
   switcher.querySelector('button')?.click();
 }
 
-// Показ выбранного плеера
-function showPlayer(src,name){
+// دالة عرض المشغل المختار داخل الـ iframe
+function showPlayer(src, name){
   const frame = document.getElementById('playerFrame');
-  const iframe=document.createElement('iframe');
-  iframe.src=src; iframe.loading='lazy';
-  iframe.title=name; iframe.allowFullscreen=''; iframe.setAttribute('allow','autoplay; fullscreen; picture-in-picture');
-  frame.innerHTML=''; frame.appendChild(iframe);
+  const iframe = document.createElement('iframe');
+  iframe.src = src; 
+  iframe.loading = 'lazy';
+  iframe.title = name; 
+  iframe.allowFullscreen = true; 
+  iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+  // تنسيق لملء الإطار
+  iframe.style.width = "100%";
+  iframe.style.height = "100%";
+  iframe.style.border = "none";
+  
+  frame.innerHTML = ''; 
+  frame.appendChild(iframe);
 }
 
-// Загрузка из URL
+// التنفيذ الفوري عند تحميل الصفحة
 (function(){
-  const params=new URLSearchParams(location.search);
-  const id=params.get('id');
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id'); // جلب المعرف من رابط الصفحة
   if(id) buildPlayers(id);
+  else {
+      // للتجربة فقط: إذا لم يكن هناك ID في الرابط، سنضع واحداً افتراضياً
+      // يمكنك حذف هذا السطر لاحقاً
+      console.log("No ID found in URL, waiting for input...");
+  }
 })();
 </script>
 </body>
